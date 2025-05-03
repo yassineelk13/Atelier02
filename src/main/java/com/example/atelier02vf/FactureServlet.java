@@ -1,27 +1,45 @@
 package com.example.atelier02vf;
 
-import java.io.IOException;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
-import com.google.gson.Gson;
-import java.util.HashMap;
-import java.util.Map;
 
-@WebServlet(name = "facture", value = "/facture")
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(name = "factureServlet", value = "/factures")
 public class FactureServlet extends HttpServlet {
+
+    @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
+        HttpSession session = request.getSession();
 
-        // Sample facture data
-        Map<String, Object> facture = new HashMap<>();
-        facture.put("datefacture", "2025-05-01");
-        facture.put("client", "Imane Haffou");
-        facture.put("total", 2500);
+        // Retrieve or create the list of factures
+        List<String> factures = (List<String>) session.getAttribute("factures");
+        if (factures == null) {
+            factures = new ArrayList<>();
+            session.setAttribute("factures", factures);
+        }
 
-        // Convert to JSON using Gson
-        Gson gson = new Gson();
-        String json = gson.toJson(facture);
+        // Get parameters from request
+        String id = request.getParameter("id");
+        String date = request.getParameter("date");
+        String client = request.getParameter("client");
+        String total = request.getParameter("total");
 
-        response.getWriter().write(json);
+        // Add a facture if all fields are provided
+        if (id != null && date != null && client != null && total != null &&
+                !id.isEmpty() && !date.isEmpty() && !client.isEmpty() && !total.isEmpty()) {
+
+            String factureStr = "ID: " + id + ", Date: " + date + ", Client: " + client + ", Total: " + total;
+            factures.add(factureStr);
+        }
+
+        // Display the list of factures
+        response.setContentType("text/plain");
+        response.getWriter().println("Liste des factures dans la session :");
+        for (String f : factures) {
+            response.getWriter().println("- " + f);
+        }
     }
 }
